@@ -161,7 +161,21 @@ class App extends Component {
           throw new Error("No debt order has been generated yet!");
       }
 
-      this.setState( { creditorAllowanceApproved: true } );
+      const debtOrder = JSON.parse(this.state.debtOrder);
+
+      debtOrder.creditor = this.state.accounts[0];
+
+      const { dharma } = this.state;
+
+// magic
+
+      await dharma.token.setUnlimitedProxyAllowanceAsync(debtOrder.principalToken)
+   
+//      const errors = await dharma.blockchain.getErrorLogs(txHash);
+
+//     console.log(errors);
+
+      this.setState({ debtOrder: JSON.stringify(debtOrder), creditorAllowanceApproved: true });
   }
 
   async instantiateDharma() {
@@ -250,7 +264,7 @@ class App extends Component {
                     placeholder="select"
                     onChange={this.handlePrincipalTokenChange}
                 >
-                    <option value="REP">Augur (REP)</option>
+                    <option value="REP">CookieCoins (CCS)</option>
                     <option value="MKR">Maker DAO (MKR)</option>
                     <option value="ZRX">0x Token (ZRX)</option>
                   </FormControl>
