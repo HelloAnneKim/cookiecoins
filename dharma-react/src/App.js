@@ -41,7 +41,7 @@ class App extends Component {
       dharma: null,
       debtOrder: null,
       debtOrderSigned: false,
-      creditAllowanceApproved: false,
+      creditorAllowanceApproved: false,
       principalTokenSymbol: "REP",
       amortizationUnit: "hours",
     }
@@ -134,7 +134,7 @@ class App extends Component {
   }
 
   async onFillDebtOrder(e) {
-      if (!this.state.debtOrder) {
+      if (!this.state.creditorAllowanceApproved) {
           throw new Error("No debt order has been generated yet!");
       }
 
@@ -156,29 +156,12 @@ class App extends Component {
       console.log(errors);
   }
 
-  async renderCreditorAllowanceButton(e) {
+  async onCreditorAllowance(e) {
       if (!this.state.debtOrder) {
           throw new Error("No debt order has been generated yet!");
       }
 
-      const debtOrder = JSON.parse(this.state.debtOrder);
-
-      debtOrder.principalAmount = new BigNumber(debtOrder.principalAmount);
-
-      // Specify account that will be acting as the creditor in this transaction
-      debtOrder.creditor = this.state.accounts[0];
-
-      const { dharma } = this.state;
-
-      const txHash = await dharma.order.fillAsync(debtOrder);
-
-      await dharma.blockchain.awaitTransactionMinedAsync(txHash);
-
-      const errors = await dharma.blockchain.getErrorLogs(txHash);
-
-      console.log(errors);
-
-      this.setState(creditorAllowanceApproved: true });
+      this.setState( { creditorAllowanceApproved: true } );
   }
 
   async instantiateDharma() {
@@ -211,7 +194,7 @@ class App extends Component {
   }
 
   renderFillButton() {
-      if (this.state.debtOrder && this.state.debtOrderSigned) {
+      if (this.state.creditorAllowanceApproved) {
           return (
               <Button
                 bsStyle="primary"
@@ -324,6 +307,7 @@ class App extends Component {
                   </Button>
                   <code>{this.state.debtOrder}</code>
                   { this.renderCreditorAllowanceButton() }
+                  <br/><br/>
                   { this.renderFillButton() }
              </form>
             </div>
