@@ -33,7 +33,6 @@ class App extends Component {
     this.onGenerateDebtOrder = this.onGenerateDebtOrder.bind(this);
     this.onSignDebtOrder = this.onSignDebtOrder.bind(this);
     this.onFillDebtOrder = this.onFillDebtOrder.bind(this);
-    this.onCreditorAllowance = this.onCreditorAllowance.bind(this);
 
     this.state = {
       storageValue: 0,
@@ -41,7 +40,6 @@ class App extends Component {
       dharma: null,
       debtOrder: null,
       debtOrderSigned: false,
-      creditAllowanceApproved: false,
       principalTokenSymbol: "REP",
       amortizationUnit: "hours",
     }
@@ -156,31 +154,6 @@ class App extends Component {
       console.log(errors);
   }
 
-  async renderCreditorAllowanceButton(e) {
-      if (!this.state.debtOrder) {
-          throw new Error("No debt order has been generated yet!");
-      }
-
-      const debtOrder = JSON.parse(this.state.debtOrder);
-
-      debtOrder.principalAmount = new BigNumber(debtOrder.principalAmount);
-
-      // Specify account that will be acting as the creditor in this transaction
-      debtOrder.creditor = this.state.accounts[0];
-
-      const { dharma } = this.state;
-
-      const txHash = await dharma.order.fillAsync(debtOrder);
-
-      await dharma.blockchain.awaitTransactionMinedAsync(txHash);
-
-      const errors = await dharma.blockchain.getErrorLogs(txHash);
-
-      console.log(errors);
-
-      this.setState(creditorAllowanceApproved: true });
-  }
-
   async instantiateDharma() {
     const networkId = await promisify(this.state.web3.version.getNetwork)();
     const accounts = await promisify(this.state.web3.eth.getAccounts)();
@@ -218,21 +191,6 @@ class App extends Component {
                 onClick={this.onFillDebtOrder}
               >
                 Fill Debt Order
-              </Button>
-          )
-      } else {
-          return null;
-      }
-  }
-
-  renderCreditorAllowanceButton() {
-      if (this.state.debtOrder && this.state.debtOrderSigned) {
-          return (
-              <Button
-                bsStyle="primary"
-                onClick={this.onCreditorAllowance}
-              >
-                Approve Creditor Allowance 
               </Button>
           )
       } else {
@@ -323,7 +281,6 @@ class App extends Component {
                     Sign Debt Order
                   </Button>
                   <code>{this.state.debtOrder}</code>
-                  { this.renderCreditorAllowanceButton() }
                   { this.renderFillButton() }
              </form>
             </div>
