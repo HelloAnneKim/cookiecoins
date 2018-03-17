@@ -33,6 +33,7 @@ class App extends Component {
     this.onGenerateDebtOrder = this.onGenerateDebtOrder.bind(this);
     this.onSignDebtOrder = this.onSignDebtOrder.bind(this);
     this.onFillDebtOrder = this.onFillDebtOrder.bind(this);
+    this.onCreditorAllowance = this.onCreditorAllowance.bind(this);
 
     this.state = {
       storageValue: 0,
@@ -40,6 +41,7 @@ class App extends Component {
       dharma: null,
       debtOrder: null,
       debtOrderSigned: false,
+      creditorAllowanceApproved: false,
       principalTokenSymbol: "REP",
       amortizationUnit: "hours",
     }
@@ -132,7 +134,7 @@ class App extends Component {
   }
 
   async onFillDebtOrder(e) {
-      if (!this.state.debtOrder) {
+      if (!this.state.creditorAllowanceApproved) {
           throw new Error("No debt order has been generated yet!");
       }
 
@@ -152,6 +154,28 @@ class App extends Component {
       const errors = await dharma.blockchain.getErrorLogs(txHash);
 
       console.log(errors);
+  }
+
+  async onCreditorAllowance(e) {
+      if (!this.state.debtOrder) {
+          throw new Error("No debt order has been generated yet!");
+      }
+
+      const debtOrder = JSON.parse(this.state.debtOrder);
+
+      debtOrder.creditor = this.state.accounts[0];
+
+      const { dharma } = this.state;
+
+// magic
+
+      await dharma.token.setUnlimitedProxyAllowanceAsync(debtOrder.principalToken)
+   
+//      const errors = await dharma.blockchain.getErrorLogs(txHash);
+
+//     console.log(errors);
+
+      this.setState({ debtOrder: JSON.stringify(debtOrder), creditorAllowanceApproved: true });
   }
 
   async instantiateDharma() {
@@ -184,13 +208,28 @@ class App extends Component {
   }
 
   renderFillButton() {
-      if (this.state.debtOrder && this.state.debtOrderSigned) {
+      if (this.state.creditorAllowanceApproved) {
           return (
               <Button
                 bsStyle="primary"
                 onClick={this.onFillDebtOrder}
               >
                 Fill Debt Order
+              </Button>
+          )
+      } else {
+          return null;
+      }
+  }
+
+  renderCreditorAllowanceButton() {
+      if (this.state.debtOrder && this.state.debtOrderSigned) {
+          return (
+              <Button
+                bsStyle="primary"
+                onClick={this.onCreditorAllowance}
+              >
+                Approve Creditor Allowance 
               </Button>
           )
       } else {
@@ -225,7 +264,7 @@ class App extends Component {
                     placeholder="select"
                     onChange={this.handlePrincipalTokenChange}
                 >
-                    <option value="REP">Augur (REP)</option>
+                    <option value="REP">CookieCoins (CCS)</option>
                     <option value="MKR">Maker DAO (MKR)</option>
                     <option value="ZRX">0x Token (ZRX)</option>
                   </FormControl>
@@ -281,6 +320,8 @@ class App extends Component {
                     Sign Debt Order
                   </Button>
                   <code>{this.state.debtOrder}</code>
+                  { this.renderCreditorAllowanceButton() }
+                  <br/><br/>
                   { this.renderFillButton() }
              </form>
             </div>
