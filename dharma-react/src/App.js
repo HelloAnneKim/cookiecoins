@@ -149,7 +149,7 @@ class App extends Component {
 
       const txHash = await dharma.order.fillAsync(debtOrder);
 
-      await dharma.blockchain.awaitTransactionMinedAsync(txHash);
+      await dharma.blockchain.awaitTransactionMinedAsync(txHash,1000,100000);
 
       const errors = await dharma.blockchain.getErrorLogs(txHash);
 
@@ -163,18 +163,13 @@ class App extends Component {
 
       const debtOrder = JSON.parse(this.state.debtOrder);
 
+      // Specify account that will be acting as the creditor in this transaction
       debtOrder.creditor = this.state.accounts[0];
 
       const { dharma } = this.state;
 
-// magic
-
       await dharma.token.setUnlimitedProxyAllowanceAsync(debtOrder.principalToken)
    
-//      const errors = await dharma.blockchain.getErrorLogs(txHash);
-
-//     console.log(errors);
-
       this.setState({ debtOrder: JSON.stringify(debtOrder), creditorAllowanceApproved: true });
   }
 
